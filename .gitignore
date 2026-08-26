@@ -1,0 +1,70 @@
+# Windows and PowerShell
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.tmp
+*.temp
+*.bak
+*.old
+*.log
+*.etl
+*.dmp
+*.clixml
+
+# PowerShell build and test output
+bin/
+obj/
+TestResults/
+coverage/
+*.trx
+*.nupkg
+
+# Editors and local tooling
+.vscode/
+.idea/
+*.code-workspace
+*.user
+*.suo
+
+# Local configuration and environment files
+.env
+.env.*
+!.env.example
+*.local
+config.local.*
+settings.local.*
+
+# Secrets and credentials
+*.secret
+*.secrets
+*.credentials
+credentials.*
+secrets.*
+*.token
+*.key
+*.pem
+*.pfx
+*.p12
+*.cer
+*.crt
+*.csr
+*.jks
+*.keystore
+*.ovpn
+*.rdp
+
+# Operational exports, captures, and backups
+*.pcap
+*.pcapng
+*.cap
+*.har
+*.zip
+*.7z
+*.tar
+*.gz
+*.backup
+*.dump
+exports/
+captures/
+backups/
