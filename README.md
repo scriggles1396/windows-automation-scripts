@@ -18,6 +18,10 @@ A collection of reusable PowerShell and Windows automation scripts, organized in
 │   └── Utilities/
 ├── templates/
 │   └── PowerShell-Script-Header.ps1
+├── docs/
+│   ├── Script-Index.md
+│   ├── Requirements.md
+│   └── <one guide per published script>
 ├── .gitignore
 ├── LICENSE
 └── SECURITY.md
@@ -37,6 +41,15 @@ Folders can be added or renamed as the collection grows. A script that develops 
 5. Keep a backup or recovery plan when a script changes files, devices, or configuration.
 
 Scripts are provided as examples and utilities, without a guarantee that they are suitable for a particular system or environment.
+
+## Script guides
+
+Start with the [script index](docs/Script-Index.md). It links to each available script's
+requirements, setup instructions, usage, outputs, safety notes, and troubleshooting guidance.
+
+Before running a script, check the [common requirements](docs/Requirements.md) and the
+requirements listed for that specific script. Some scripts rely on built-in Windows tools;
+others need separately installed programs.
 
 ## AI usage disclosure
 
