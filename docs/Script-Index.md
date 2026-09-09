@@ -9,6 +9,7 @@ limitations.
 | `Personal/System/Export-All-WindowsEventLogs.ps1` | Exports accessible Windows Event Viewer logs and creates a ZIP archive. | None on supported Windows versions; uses built-in Windows tools. | [Open guide](Personal-System-Export-All-WindowsEventLogs.md) |
 | `Personal/System/Robocopy-InteractiveTransfer.ps1` | Copies, moves, or mirrors a folder to one or more locations. | None on supported Windows versions; uses built-in Robocopy. | [Open guide](Personal-System-Robocopy-InteractiveTransfer.md) |
 | `Personal/Media/Media-Download-YouTube.ps1` | Downloads a YouTube video or converts it to MP3 audio. | `yt-dlp` and FFmpeg. | [Open guide](Personal-Media-Media-Download-YouTube.md) |
+| `Personal/Media/Optimize-ImagesLosslessly.ps1` | Creates smaller JPEG and PNG copies without changing rendered pixels. | Downloads oxipng and MozJPEG on first use. | [Open guide](Personal-Media-Optimize-ImagesLosslessly.md) |
 
 ## Adding a guide for a new script
 

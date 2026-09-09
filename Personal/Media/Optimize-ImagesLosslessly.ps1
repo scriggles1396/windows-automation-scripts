@@ -1,25 +1,53 @@
 <#
 .SYNOPSIS
-  Creates smaller copies of common images without changing their pixels.
+    Losslessly reduces the size of JPEG and PNG files in a folder.
 
 .DESCRIPTION
-  JPEG and PNG are optimized using lossless encoders. By default, optimized
-  files are written to an "optimized" folder, leaving the originals untouched.
-  A file is replaced only when the optimized version is actually smaller.
+    Creates optimized JPEG and PNG copies without changing their rendered
+    pixels. Original files are left untouched by default; use -InPlace only
+    when replacement is intended. Required command-line tools are downloaded
+    from their public GitHub releases on first use.
 
-  GIF, WebP, HEIC, TIFF, BMP, and SVG files are intentionally skipped. This
-  script does not use a transformation for those formats that could alter their
-  appearance, animation, metadata, or editability.
+.AUTHOR
+    scriggles1396
 
-.EXAMPLE
-  .\Optimize-ImagesLosslessly.ps1
-  Optimizes images in the folder containing this script.
+.VERSION
+    1.0.0
 
-.EXAMPLE
-  .\Optimize-ImagesLosslessly.ps1 -Path C:\Photos
+.LAST UPDATED
+    2026-09-09
 
-.EXAMPLE
-  .\Optimize-ImagesLosslessly.ps1 -Path C:\Photos -Recurse -InPlace
+.AI ASSISTANCE
+    AI-assisted:
+    Portions of this script and/or its documentation were created with
+    assistance from ChatGPT by OpenAI.
+
+.REQUIREMENTS
+    - Windows PowerShell 5.1 or later
+    - Internet access on first use to download oxipng and MozJPEG
+
+.PARAMETER Path
+    Folder to scan. Defaults to the folder containing this script.
+
+.PARAMETER Recurse
+    Include subfolders.
+
+.PARAMETER InPlace
+    Replace files only when a smaller lossless version is produced.
+
+.PARAMETER OutputPath
+    Destination for optimized copies. Defaults to an optimized subfolder.
+
+.OUTPUTS
+    Smaller JPEG and PNG copies, plus downloaded tools in .image-tools.
+
+.SAFETY
+    The default behavior retains originals. GIF, WebP, HEIC, TIFF, BMP, and
+    SVG files are skipped rather than applying transformations that could alter
+    their appearance, animation, metadata, or editability.
+
+.LICENSE
+    MIT License. See the repository LICENSE file.
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
