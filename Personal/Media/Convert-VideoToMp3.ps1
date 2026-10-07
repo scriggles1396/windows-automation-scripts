@@ -3,11 +3,13 @@
     Converts local video files to MP3 audio on Windows.
 
 .DESCRIPTION
-    Converts one video file or a folder of video files to MP3 using FFmpeg. If FFmpeg is not
-    found, the script attempts to install it with Windows Package Manager (winget).
+    Converts one video file or a folder of video files to MP3 using FFmpeg. When no input path
+    is supplied, the script opens a simple menu for single-file or whole-folder conversion.
+    If FFmpeg is not found, the script attempts to install it with Windows Package Manager
+    (winget).
 
     The script is designed for Windows desktop use, supports -WhatIf, avoids overwriting
-    existing MP3 files unless requested, and keeps output paths simple.
+    existing MP3 files unless requested, and saves MP3 files to Music\YouTube by default.
 
 .AUTHOR
     scriggles1396
@@ -30,11 +32,11 @@
     - FFmpeg, installed automatically with winget if missing
 
 .PARAMETER Path
-    Video file or folder to convert.
+    Video file or folder to convert. If omitted, the script prompts for single-file or
+    whole-folder mode.
 
 .PARAMETER OutputFolder
-    Folder where MP3 files are saved. Defaults to an MP3 folder beside the source file or
-    inside the source folder.
+    Folder where MP3 files are saved. Defaults to the current user's Music\YouTube folder.
 
 .PARAMETER Recurse
     Converts supported video files inside child folders.
@@ -47,11 +49,11 @@
 
 .EXAMPLE
     PS> .\Convert-VideoToMp3.ps1 -Path "D:\Videos\clip.mp4"
-    Converts clip.mp4 to D:\Videos\MP3\clip.mp3.
+    Converts clip.mp4 to Music\YouTube\clip.mp3.
 
 .EXAMPLE
     PS> .\Convert-VideoToMp3.ps1 -Path "D:\Videos" -Recurse -Bitrate 256k
-    Converts supported video files under D:\Videos to MP3 at 256 kbps.
+    Converts supported video files under D:\Videos to MP3 at 256 kbps, saved in Music\YouTube.
 
 .EXAMPLE
     PS> .\Convert-VideoToMp3.ps1 -Path "D:\Videos" -WhatIf
@@ -73,8 +75,6 @@
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [Parameter(Mandatory = $true)]
-    [ValidateNotNullOrEmpty()]
     [string]$Path,
 
     [string]$OutputFolder,
@@ -196,13 +196,43 @@ function Get-VideoFiles {
 }
 
 function Get-DefaultOutputFolder {
-    param([Parameter(Mandatory = $true)][System.IO.FileSystemInfo]$FirstInput)
+    $MusicFolder = [Environment]::GetFolderPath('MyMusic')
 
-    if ($FirstInput.PSIsContainer) {
-        return Join-Path $FirstInput.FullName 'MP3'
+    if ([string]::IsNullOrWhiteSpace($MusicFolder)) {
+        $MusicFolder = Join-Path $env:USERPROFILE 'Music'
     }
 
-    return Join-Path $FirstInput.DirectoryName 'MP3'
+    return Join-Path $MusicFolder 'YouTube'
+}
+
+function Read-InputPath {
+    Write-Host '========================================'
+    Write-Host ' Video to MP3 Converter'
+    Write-Host '========================================'
+    Write-Host ''
+    Write-Host '1. Convert a single video file'
+    Write-Host '2. Convert every supported video in a folder'
+    Write-Host ''
+
+    $Choice = Read-Host 'Select 1 or 2'
+
+    switch ($Choice) {
+        '1' {
+            $Script:Recurse = $false
+            return Read-Host 'Enter full path to the video file'
+        }
+        '2' {
+            $FolderPath = Read-Host 'Enter full path to the folder'
+            $RecursiveChoice = Read-Host 'Include subfolders? (Y/N)'
+            if ($RecursiveChoice -match '^[Yy]') {
+                $Script:Recurse = $true
+            }
+            return $FolderPath
+        }
+        default {
+            throw 'Invalid selection. Choose 1 or 2.'
+        }
+    }
 }
 
 function Get-SafeOutputPath {
@@ -228,6 +258,10 @@ function Get-SafeOutputPath {
 }
 
 try {
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        $Path = Read-InputPath
+    }
+
     $ResolvedInput = Resolve-Path -LiteralPath $Path -ErrorAction Stop
     $InputItem = Get-Item -LiteralPath $ResolvedInput.ProviderPath -ErrorAction Stop
     $Files = @(Get-VideoFiles -InputPath $InputItem.FullName)
@@ -237,7 +271,7 @@ try {
     }
 
     if ([string]::IsNullOrWhiteSpace($OutputFolder)) {
-        $OutputFolder = Get-DefaultOutputFolder -FirstInput $InputItem
+        $OutputFolder = Get-DefaultOutputFolder
     }
 
     if ($PSCmdlet.ShouldProcess($OutputFolder, 'Create output folder')) {
