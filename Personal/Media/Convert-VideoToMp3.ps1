@@ -275,6 +275,16 @@ function Read-InputPath {
     }
 }
 
+function Normalize-InputPath {
+    param([string]$InputPath)
+
+    if ([string]::IsNullOrWhiteSpace($InputPath)) {
+        return $InputPath
+    }
+
+    return $InputPath.Trim().Trim('"').Trim("'")
+}
+
 function Get-SafeOutputPath {
     param(
         [Parameter(Mandatory = $true)][System.IO.FileInfo]$InputFile,
@@ -301,6 +311,8 @@ try {
     if ([string]::IsNullOrWhiteSpace($Path)) {
         $Path = Read-InputPath
     }
+
+    $Path = Normalize-InputPath -InputPath $Path
 
     $ResolvedInput = Resolve-Path -LiteralPath $Path -ErrorAction Stop
     $InputItem = Get-Item -LiteralPath $ResolvedInput.ProviderPath -ErrorAction Stop
