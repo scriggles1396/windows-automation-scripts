@@ -107,6 +107,64 @@ function Find-Program {
     return $null
 }
 
+function Test-IsAdministrator {
+    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Invoke-WingetInstall {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$PackageId,
+
+        [Parameter(Mandatory = $true)]
+        [string]$DisplayName
+    )
+
+    $winget = Find-Program "winget.exe"
+
+    if (-not $winget) {
+        throw "$DisplayName could not be found and WinGet is unavailable. Install $DisplayName, then run this script again."
+    }
+
+    $arguments = @(
+        "install",
+        "--id", $PackageId,
+        "--exact",
+        "--source", "winget",
+        "--accept-package-agreements",
+        "--accept-source-agreements"
+    )
+
+    Write-Host "$DisplayName not found. Installing with WinGet..."
+    & $winget @arguments
+
+    if ($LASTEXITCODE -eq 0) {
+        return
+    }
+
+    if (Test-IsAdministrator) {
+        throw "$DisplayName installation failed with exit code $LASTEXITCODE."
+    }
+
+    Write-Host ""
+    Write-Host "$DisplayName could not install without elevation."
+    $answer = Read-Host "Open an Administrator install prompt now? (Y/N)"
+
+    if ($answer -notmatch "^[Yy]") {
+        throw "$DisplayName installation was cancelled."
+    }
+
+    $elevatedCommand = "& `"$winget`" $($arguments -join ' '); Write-Host ''; Read-Host 'Press Enter to close'"
+
+    Start-Process `
+        -FilePath "powershell.exe" `
+        -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $elevatedCommand `
+        -Verb RunAs `
+        -Wait
+}
+
 function Show-Header {
 
     Clear-Host
@@ -135,16 +193,15 @@ try {
     $ytDlp = Find-Program "yt-dlp.exe"
 
     if (-not $ytDlp) {
+        Invoke-WingetInstall `
+            -PackageId "yt-dlp.yt-dlp" `
+            -DisplayName "yt-dlp"
 
-        Write-Host "ERROR: yt-dlp could not be found."
-        Write-Host ""
-        Write-Host "Install it with:"
-        Write-Host ""
-        Write-Host "winget install --id yt-dlp.yt-dlp -e --source winget"
-        Write-Host ""
+        $ytDlp = Find-Program "yt-dlp.exe"
 
-        Wait-BeforeExit
-        exit
+        if (-not $ytDlp) {
+            throw "yt-dlp installed, but yt-dlp.exe was not found. Close and reopen PowerShell, then run this script again."
+        }
     }
 
     Write-Host "yt-dlp found:"
@@ -158,16 +215,15 @@ try {
     $ffmpeg = Find-Program "ffmpeg.exe"
 
     if (-not $ffmpeg) {
+        Invoke-WingetInstall `
+            -PackageId "Gyan.FFmpeg" `
+            -DisplayName "FFmpeg"
 
-        Write-Host "ERROR: FFmpeg could not be found."
-        Write-Host ""
-        Write-Host "Install it with:"
-        Write-Host ""
-        Write-Host "winget install --id Gyan.FFmpeg -e --source winget"
-        Write-Host ""
+        $ffmpeg = Find-Program "ffmpeg.exe"
 
-        Wait-BeforeExit
-        exit
+        if (-not $ffmpeg) {
+            throw "FFmpeg installed, but ffmpeg.exe was not found. Close and reopen PowerShell, then run this script again."
+        }
     }
 
     Write-Host "FFmpeg found:"

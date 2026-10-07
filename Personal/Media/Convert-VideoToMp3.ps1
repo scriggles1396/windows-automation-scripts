@@ -132,19 +132,59 @@ function Find-Program {
     return $null
 }
 
-function Install-FfmpegWithWinget {
+function Test-IsAdministrator {
+    $CurrentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $Principal = New-Object Security.Principal.WindowsPrincipal($CurrentIdentity)
+    return $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Invoke-WingetInstall {
+    param(
+        [Parameter(Mandatory = $true)][string]$PackageId,
+        [Parameter(Mandatory = $true)][string]$DisplayName
+    )
+
     $Winget = Find-Program -ProgramName 'winget.exe'
     if (-not $Winget) {
-        throw 'FFmpeg was not found and winget.exe is not available. Install FFmpeg manually, then run this script again.'
+        throw "$DisplayName was not found and winget.exe is not available. Install $DisplayName manually, then run this script again."
     }
 
-    if ($PSCmdlet.ShouldProcess('Gyan.FFmpeg', 'Install FFmpeg with winget')) {
-        Write-Host 'FFmpeg not found. Installing with winget...'
-        & $Winget install --id Gyan.FFmpeg --exact --source winget --accept-package-agreements --accept-source-agreements
+    $Arguments = @(
+        'install',
+        '--id', $PackageId,
+        '--exact',
+        '--source', 'winget',
+        '--accept-package-agreements',
+        '--accept-source-agreements'
+    )
 
-        if ($LASTEXITCODE -ne 0) {
-            throw "winget failed to install FFmpeg. Exit code: $LASTEXITCODE"
-        }
+    Write-Host "$DisplayName not found. Installing with winget..."
+    & $Winget @Arguments
+    if ($LASTEXITCODE -eq 0) {
+        return
+    }
+
+    if (Test-IsAdministrator) {
+        throw "winget failed to install $DisplayName. Exit code: $LASTEXITCODE"
+    }
+
+    Write-Host ''
+    Write-Host "winget could not install $DisplayName without elevation."
+    $Answer = Read-Host 'Open an Administrator install prompt now? (Y/N)'
+    if ($Answer -notmatch '^[Yy]') {
+        throw "$DisplayName installation was cancelled."
+    }
+
+    $ElevatedCommand = "& `"$Winget`" $($Arguments -join ' '); Write-Host ''; Read-Host 'Press Enter to close'"
+    Start-Process -FilePath 'powershell.exe' `
+        -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', $ElevatedCommand `
+        -Verb RunAs `
+        -Wait
+}
+
+function Install-FfmpegWithWinget {
+    if ($PSCmdlet.ShouldProcess('Gyan.FFmpeg', 'Install FFmpeg with winget')) {
+        Invoke-WingetInstall -PackageId 'Gyan.FFmpeg' -DisplayName 'FFmpeg'
     }
 }
 
